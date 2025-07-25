@@ -1,13 +1,9 @@
+import { AccessToken, AccessTokenOptions, VideoGrant } from 'livekit-server-sdk';
 import { NextResponse } from 'next/server';
-import { AccessToken, type AccessTokenOptions, type VideoGrant } from 'livekit-server-sdk';
 
-// NOTE: you are expected to define the following environment variables in `.env.local`:
+const LIVEKIT_URL = process.env.LIVEKIT_URL;
 const API_KEY = process.env.LIVEKIT_API_KEY;
 const API_SECRET = process.env.LIVEKIT_API_SECRET;
-const LIVEKIT_URL = process.env.LIVEKIT_URL;
-
-// don't cache the results
-export const revalidate = 0;
 
 export type ConnectionDetails = {
   serverUrl: string;
@@ -16,7 +12,7 @@ export type ConnectionDetails = {
   participantToken: string;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     if (LIVEKIT_URL === undefined) {
       throw new Error('LIVEKIT_URL is not defined');
@@ -28,9 +24,33 @@ export async function GET() {
       throw new Error('LIVEKIT_API_SECRET is not defined');
     }
 
+    // Get user information from cookies
+    const cookies = request.headers.get('cookie');
+    let participantName = 'user';
+    let participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
+    
+    if (cookies) {
+      const cookieMap = new Map();
+      cookies.split(';').forEach(cookie => {
+        const [key, value] = cookie.trim().split('=');
+        cookieMap.set(key, value);
+      });
+      
+      const accessToken = cookieMap.get('access_token');
+      if (accessToken) {
+        try {
+          const tokenPayload = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64').toString());
+          const userId = tokenPayload.sub;
+          const shortId = userId.substring(0, 8);
+          participantName = `User ${shortId}`;
+          participantIdentity = `user_${shortId}`;
+        } catch (error) {
+          console.error('Error parsing token:', error);
+        }
+      }
+    }
+
     // Generate participant token
-    const participantName = 'user';
-    const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
     const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
     const participantToken = await createParticipantToken(
       { identity: participantIdentity, name: participantName },

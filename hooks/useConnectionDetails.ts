@@ -19,7 +19,9 @@ export default function useConnectionDetails() {
       process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
       window.location.origin
     );
-    fetch(url.toString())
+    fetch(url.toString(), {
+      credentials: 'include', // Include cookies so backend can access access_token
+    })
       .then((res) => res.json())
       .then((data) => {
         setConnectionDetails(data);

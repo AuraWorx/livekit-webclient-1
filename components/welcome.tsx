@@ -1,4 +1,7 @@
+import { LoginButton } from '@/components/auth/login-button';
+import { UserProfile } from '@/components/auth/user-profile';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 interface WelcomeProps {
   disabled: boolean;
@@ -12,12 +15,19 @@ export const Welcome = ({
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeProps) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
   return (
     <div
       ref={ref}
       inert={disabled}
       className="fixed inset-0 z-10 mx-auto flex h-svh flex-col items-center justify-center text-center"
     >
+      {/* Header with user profile */}
+      <div className="absolute top-4 right-4">
+        <UserProfile />
+      </div>
+
       <svg
         width="64"
         height="64"
@@ -35,21 +45,37 @@ export const Welcome = ({
       <p className="text-fg1 max-w-prose pt-1 leading-6 font-medium">
         Chat live with your voice AI agent
       </p>
-      <Button variant="primary" size="lg" onClick={onStartCall} className="mt-6 w-64 font-mono">
-        {startButtonText}
-      </Button>
-      <p className="text-fg1 m fixed bottom-5 left-1/2 w-full max-w-prose -translate-x-1/2 pt-1 text-xs leading-5 font-normal text-pretty md:text-sm">
-        Need help getting set up? Check out the{' '}
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://docs.livekit.io/agents/start/voice-ai/"
-          className="underline"
-        >
-          Voice AI quickstart
-        </a>
-        .
-      </p>
+
+      {isLoading ? (
+        <div className="mt-6 flex items-center gap-2">
+          <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+          <span className="text-muted-foreground text-sm">Loading...</span>
+        </div>
+      ) : isAuthenticated ? (
+        <div className="mt-6 space-y-4">
+          <div className="text-muted-foreground text-sm">
+            Welcome back, {user?.name || user?.email}!
+          </div>
+          <Button variant="primary" size="lg" onClick={onStartCall} className="w-64 font-mono">
+            {startButtonText}
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-4">
+          <div className="text-muted-foreground mb-4 text-sm">
+            Sign in to save your conversations and preferences
+          </div>
+          <LoginButton className="w-64" />
+          <div className="text-muted-foreground text-sm">
+            or{' '}
+            <button onClick={onStartCall} className="text-primary font-medium hover:underline">
+              continue as guest
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Removed footer help link */}
     </div>
   );
 };
