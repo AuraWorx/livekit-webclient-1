@@ -14,9 +14,36 @@ export type ConnectionDetails = {
   roomName: string;
   participantName: string;
   participantToken: string;
+  participantIdentity?: string;
+};
+
+// Request body type for user context
+type ConnectionRequest = {
+  user?: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  } | null;
+  isGuest?: boolean;
 };
 
 export async function GET() {
+  // Maintain backward compatibility with GET requests
+  return await handleConnectionRequest({ user: null, isGuest: true });
+}
+
+export async function POST(request: Request) {
+  try {
+    const body: ConnectionRequest = await request.json();
+    return await handleConnectionRequest(body);
+  } catch (error) {
+    console.error('Error parsing request body:', error);
+    return new NextResponse('Invalid request body', { status: 400 });
+  }
+}
+
+async function handleConnectionRequest(request: ConnectionRequest) {
   try {
     if (LIVEKIT_URL === undefined) {
       throw new Error('LIVEKIT_URL is not defined');
@@ -28,10 +55,26 @@ export async function GET() {
       throw new Error('LIVEKIT_API_SECRET is not defined');
     }
 
-    // Generate participant token
-    const participantName = 'user';
-    const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
+    const { user, isGuest = false } = request;
+
+    // Generate participant identity based on user type
+    let participantIdentity: string;
+    let participantName: string;
+
+    if (user && user.email && !isGuest) {
+      // Authenticated user - use email as identity
+      participantIdentity = user.email;
+      participantName =
+        user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
+    } else {
+      // Guest user or no user info - use random identity
+      participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
+      participantName = 'Guest User';
+    }
+
+    // Room names remain random for security
     const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
+
     const participantToken = await createParticipantToken(
       { identity: participantIdentity, name: participantName },
       roomName
@@ -43,6 +86,7 @@ export async function GET() {
       roomName,
       participantToken: participantToken,
       participantName,
+      participantIdentity,
     };
     const headers = new Headers({
       'Cache-Control': 'no-store',

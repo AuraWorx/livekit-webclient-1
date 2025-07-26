@@ -1,0 +1,515 @@
+# User Integration with LiveKit - PRD
+
+## Overview
+
+This document outlines the implementation of Google Auth user integration with LiveKit participant identification. Currently, all participants are assigned random identities like `voice_assistant_user_8751`, making it difficult to identify authenticated users in voice sessions. This feature will integrate authenticated Google users with their actual user information for better session management and user experience.
+
+## Problem Statement
+
+### Current State
+- All participants get random identities: `voice_assistant_user_XXXX`
+- No way to identify which authenticated user is in a session
+- Difficult to track user sessions and provide personalized experiences
+- Guest users and authenticated users are indistinguishable in LiveKit sessions
+
+### Desired State
+- Authenticated users have identifiable participant identities (email, name, or user ID)
+- Guest users continue to use random identities for privacy
+- Session tracking and user management capabilities
+- Consistent participant identity across sessions for authenticated users
+
+## Goals
+
+- Integrate Google Auth user information with LiveKit participant identification
+- Maintain security and privacy for both authenticated and guest users
+- Provide consistent user experience across sessions
+- Enable session tracking and user management features
+- Maintain backward compatibility with existing functionality
+
+## User Stories
+
+### As an Authenticated User
+- I want my participant identity to reflect my actual name or email
+- I want consistent identification across different voice sessions
+- I want my sessions to be trackable and manageable
+
+### As a Guest User
+- I want to maintain privacy with random participant identities
+- I want to continue using the app without authentication
+- I want my sessions to remain anonymous
+
+### As a System Administrator
+- I want to track which users are participating in sessions
+- I want to manage user sessions and access
+- I want to provide personalized experiences based on user identity
+
+## Technical Requirements
+
+### Frontend Requirements
+
+#### Authentication Integration
+- Pass authenticated user information to LiveKit connection process
+- Handle both authenticated and guest user scenarios
+- Maintain user context throughout the session lifecycle
+
+#### API Integration
+- Modify connection details API to accept user information
+- Generate appropriate participant identities based on user type
+- Maintain security for room names and access tokens
+
+#### User Experience
+- Consistent participant identification across sessions
+- Clear distinction between authenticated and guest users
+- Seamless integration with existing authentication flow
+
+### Backend Requirements
+
+#### API Modifications
+- Update `/api/connection-details` endpoint to accept user context
+- Generate participant identities based on user authentication status
+- Maintain security standards for room and token generation
+
+#### Security Considerations
+- Secure handling of user information
+- Proper token validation and expiration
+- Protection against identity spoofing
+
+## Implementation Approach
+
+### Option 1: Modified API Endpoint (Recommended)
+
+#### Overview
+Modify the existing `/api/connection-details` endpoint to accept user information and generate appropriate participant identities based on authentication status.
+
+#### Implementation Details
+
+**1. Frontend Changes**
+- Update `useConnectionDetails` hook to pass user information
+- Include user context in API requests
+- Handle both authenticated and guest scenarios
+
+**2. Backend Changes**
+- Modify `/api/connection-details` to accept user data
+- Generate participant identity based on user type:
+  - **Authenticated users:** Use `user.email` or `user.id`
+  - **Guest users:** Use random generation (current approach)
+- Maintain random room name generation for security
+
+**3. Participant Identity Strategy**
+```typescript
+// Authenticated users
+const participantIdentity = user ? user.email : `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
+
+// Room names remain random for security
+const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
+```
+
+### Option 2: Frontend Token Generation
+
+#### Overview
+Generate participant tokens on the frontend using user information and validate with backend.
+
+#### Pros
+- More control over participant identity generation
+- Reduced backend complexity
+
+#### Cons
+- Security concerns with client-side token generation
+- Requires additional backend validation
+
+### Option 3: Session-Based Approach
+
+#### Overview
+Store user session information and generate participant identity based on session data.
+
+#### Pros
+- Consistent identity across sessions
+- Easy session management
+
+#### Cons
+- Additional session management complexity
+- Potential session persistence issues
+
+## Technical Architecture
+
+### Modified API Flow
+
+```
+Frontend (useConnectionDetails)
+    ↓ (with user context)
+/api/connection-details
+    ↓ (generate based on user type)
+LiveKit Token Generation
+    ↓
+Room Connection
+```
+
+### User Context Integration
+
+```typescript
+// Updated useConnectionDetails hook
+const { user, isAuthenticated, isGuest } = useAuth();
+
+const fetchConnectionDetails = useCallback(() => {
+  const url = new URL('/api/connection-details', window.location.origin);
+  
+  // Add user context to request
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user: isAuthenticated ? {
+        id: user?.id,
+        email: user?.email,
+        firstName: user?.firstName,
+        lastName: user?.lastName
+      } : null,
+      isGuest
+    })
+  };
+  
+  fetch(url.toString(), requestOptions)
+    .then(res => res.json())
+    .then(data => setConnectionDetails(data));
+}, [user, isAuthenticated, isGuest]);
+```
+
+### API Endpoint Modifications
+
+```typescript
+// Updated /api/connection-details/route.ts
+export async function POST(request: Request) {
+  const { user, isGuest } = await request.json();
+  
+  // Generate participant identity based on user type
+  const participantIdentity = user 
+    ? user.email || `user_${user.id}`
+    : `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
+  
+  const participantName = user 
+    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email
+    : 'Guest User';
+  
+  // Room names remain random for security
+  const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
+  
+  const participantToken = await createParticipantToken(
+    { identity: participantIdentity, name: participantName },
+    roomName
+  );
+  
+  return NextResponse.json({
+    serverUrl: LIVEKIT_URL,
+    roomName,
+    participantToken,
+    participantName,
+    participantIdentity
+  });
+}
+```
+
+## Security Considerations
+
+### Data Protection
+- User information transmitted securely via HTTPS
+- No sensitive data stored in client-side storage
+- Proper token validation and expiration
+
+### Identity Security
+- Authenticated users can only use their own identity
+- Guest users maintain anonymous random identities
+- Room names remain random to prevent guessing attacks
+
+### Session Security
+- Token expiration (15 minutes) prevents long-term access
+- Proper cleanup on session end
+- No persistent session data stored insecurely
+
+## Error Handling
+
+### Authentication Errors
+- Handle cases where user information is unavailable
+- Fallback to guest mode for authentication failures
+- Clear error messages for users
+
+### API Errors
+- Graceful degradation when connection details API fails
+- Retry mechanisms for temporary failures
+- User-friendly error messages
+
+### Network Issues
+- Handle connection timeouts
+- Provide offline mode capabilities
+- Clear feedback for connectivity issues
+
+## Testing Strategy
+
+### Unit Tests
+- Test participant identity generation logic
+- Verify user context handling
+- Test error scenarios and edge cases
+
+### Integration Tests
+- End-to-end authentication flow
+- LiveKit connection with user context
+- Session management and persistence
+
+### Manual Testing
+- Test with authenticated users
+- Test with guest users
+- Test error scenarios and edge cases
+- Cross-browser compatibility
+
+## Performance Considerations
+
+### Optimization
+- Minimize API calls for connection details
+- Efficient user context passing
+- Proper caching strategies
+
+### Monitoring
+- Track participant identity generation success rates
+- Monitor API response times
+- Log user session metrics
+
+## Success Metrics
+
+### User Experience
+- Participant identity consistency: > 95%
+- Authentication integration success rate: > 98%
+- User satisfaction with identification: > 4.5/5
+
+### Technical Performance
+- API response time: < 500ms
+- Connection success rate: > 99%
+- Error rate: < 2%
+
+## Dependencies
+
+### External Dependencies
+- Existing Google OAuth integration
+- LiveKit JavaScript SDK
+- Next.js API routes
+
+### Internal Dependencies
+- Authentication context and hooks
+- Connection details API
+- Session management components
+
+## Risk Assessment
+
+### Technical Risks
+- API modification complexity
+- Security vulnerabilities in user data handling
+- Backward compatibility issues
+
+### Mitigation Strategies
+- Comprehensive testing plan
+- Security review and audit
+- Gradual rollout with feature flags
+- Fallback mechanisms for failures
+
+## Timeline
+
+### Phase 1: Foundation (Week 1)
+- Set up API modifications
+- Create user context integration
+- Implement basic participant identity generation
+
+### Phase 2: Integration (Week 2)
+- Update frontend components
+- Integrate with existing authentication flow
+- Add error handling and edge cases
+
+### Phase 3: Testing (Week 3)
+- Comprehensive testing suite
+- Security review and audit
+- Performance optimization
+
+### Phase 4: Deployment (Week 4)
+- Gradual rollout with monitoring
+- User feedback collection
+- Documentation and training
+
+---
+
+## Task List
+
+### Phase 1: Foundation Setup
+
+- [ ] **Set up API modifications**
+  - [ ] Modify `/api/connection-details` to accept POST requests with user context
+  - [ ] Add user information validation and sanitization
+  - [ ] Implement participant identity generation logic
+  - [ ] Add security checks for user data handling
+  - [ ] Test API endpoint with various user scenarios
+
+- [ ] **Create user context integration**
+  - [ ] Update `useConnectionDetails` hook to pass user information
+  - [ ] Add user context to API requests
+  - [ ] Handle both authenticated and guest user scenarios
+  - [ ] Implement proper error handling for user context
+  - [ ] Add loading states for user context processing
+
+- [ ] **Implement participant identity generation**
+  - [ ] Create logic for authenticated user identity generation
+  - [ ] Maintain random identity generation for guest users
+  - [ ] Add validation for participant identity uniqueness
+  - [ ] Implement fallback mechanisms for edge cases
+  - [ ] Test identity generation with various user data formats
+
+### Phase 2: Frontend Integration
+
+- [ ] **Update connection details hook**
+  - [ ] Modify `useConnectionDetails` to use POST requests
+  - [ ] Add user context to request payload
+  - [ ] Handle authentication state changes
+  - [ ] Implement proper error handling and retry logic
+  - [ ] Add loading states and user feedback
+
+- [ ] **Integrate with authentication flow**
+  - [ ] Update `session-view.tsx` to use user context
+  - [ ] Modify `app.tsx` to handle user-aware connections
+  - [ ] Update `welcome.tsx` to pass user information
+  - [ ] Add user context to LiveKit room connection
+  - [ ] Test integration with existing authentication components
+
+- [ ] **Add user-aware session management**
+  - [ ] Update session tracking to include user information
+  - [ ] Add user context to session state management
+  - [ ] Implement user-specific session persistence
+  - [ ] Add user information to session logs and analytics
+  - [ ] Test session management with different user types
+
+### Phase 3: Security and Error Handling
+
+- [ ] **Implement security measures**
+  - [ ] Add input validation for user data
+  - [ ] Implement proper error handling for security issues
+  - [ ] Add rate limiting for API requests
+  - [ ] Implement secure token generation and validation
+  - [ ] Add security logging and monitoring
+
+- [ ] **Add comprehensive error handling**
+  - [ ] Handle authentication failures gracefully
+  - [ ] Implement fallback mechanisms for API failures
+  - [ ] Add user-friendly error messages
+  - [ ] Create retry logic for temporary failures
+  - [ ] Test error scenarios and edge cases
+
+- [ ] **Add data validation and sanitization**
+  - [ ] Validate user email format and uniqueness
+  - [ ] Sanitize user names and display names
+  - [ ] Add input length and format restrictions
+  - [ ] Implement proper data encoding and escaping
+  - [ ] Test validation with various input formats
+
+### Phase 4: Testing and Quality Assurance
+
+- [ ] **Create comprehensive test suite**
+  - [ ] Unit tests for participant identity generation
+  - [ ] Integration tests for API modifications
+  - [ ] End-to-end tests for authentication flow
+  - [ ] Security tests for user data handling
+  - [ ] Performance tests for API response times
+
+- [ ] **Manual testing scenarios**
+  - [ ] Test with authenticated Google users
+  - [ ] Test with guest users
+  - [ ] Test error scenarios and edge cases
+  - [ ] Test cross-browser compatibility
+  - [ ] Test mobile responsiveness
+
+- [ ] **Security audit and review**
+  - [ ] Review API security measures
+  - [ ] Audit user data handling
+  - [ ] Test for potential vulnerabilities
+  - [ ] Review token generation and validation
+  - [ ] Implement security monitoring
+
+### Phase 5: Performance and Optimization
+
+- [ ] **Optimize API performance**
+  - [ ] Implement caching for user context
+  - [ ] Optimize database queries for user data
+  - [ ] Add request compression and optimization
+  - [ ] Implement proper connection pooling
+  - [ ] Monitor and optimize API response times
+
+- [ ] **Add monitoring and analytics**
+  - [ ] Track participant identity generation success rates
+  - [ ] Monitor API response times and error rates
+  - [ ] Add user session analytics
+  - [ ] Implement performance monitoring
+  - [ ] Create dashboards for system health
+
+- [ ] **Performance testing**
+  - [ ] Load testing for API endpoints
+  - [ ] Stress testing for concurrent users
+  - [ ] Memory and CPU usage optimization
+  - [ ] Network latency testing
+  - [ ] Browser performance testing
+
+### Phase 6: Documentation and Deployment
+
+- [ ] **Create comprehensive documentation**
+  - [ ] API documentation for modified endpoints
+  - [ ] User guide for new features
+  - [ ] Developer documentation for integration
+  - [ ] Troubleshooting guide
+  - [ ] Security documentation
+
+- [ ] **Prepare deployment strategy**
+  - [ ] Create feature flags for gradual rollout
+  - [ ] Plan database migrations if needed
+  - [ ] Prepare rollback procedures
+  - [ ] Set up monitoring and alerting
+  - [ ] Create deployment checklist
+
+- [ ] **User training and support**
+  - [ ] Create user training materials
+  - [ ] Prepare support documentation
+  - [ ] Train support team on new features
+  - [ ] Create FAQ for common issues
+  - [ ] Set up user feedback collection
+
+### Phase 7: Post-Deployment
+
+- [ ] **Monitor and maintain**
+  - [ ] Monitor system performance and health
+  - [ ] Collect and analyze user feedback
+  - [ ] Track success metrics and KPIs
+  - [ ] Address any post-deployment issues
+  - [ ] Plan future enhancements
+
+- [ ] **Gather feedback and iterate**
+  - [ ] Collect user feedback on new features
+  - [ ] Analyze usage patterns and metrics
+  - [ ] Identify areas for improvement
+  - [ ] Plan future feature enhancements
+  - [ ] Update documentation based on feedback
+
+## Success Criteria
+
+### Technical Success
+- [ ] Participant identities correctly reflect user information for authenticated users
+- [ ] Guest users maintain random identities for privacy
+- [ ] API response times remain under 500ms
+- [ ] Error rate remains under 2%
+- [ ] Security audit passes with no critical issues
+
+### User Experience Success
+- [ ] Authenticated users can be identified in sessions
+- [ ] Guest users maintain privacy and anonymity
+- [ ] No disruption to existing functionality
+- [ ] User satisfaction score > 4.5/5
+- [ ] Authentication success rate > 98%
+
+### Business Success
+- [ ] Improved session tracking and management
+- [ ] Enhanced user experience and engagement
+- [ ] Better analytics and reporting capabilities
+- [ ] Reduced support requests related to user identification
+- [ ] Positive user feedback and adoption
