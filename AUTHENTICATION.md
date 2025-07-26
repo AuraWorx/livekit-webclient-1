@@ -62,6 +62,7 @@ The frontend integrates with the Python backend API endpoints:
 ## User Flow
 
 ### Authenticated Users
+
 1. User visits the application
 2. User clicks "Sign in with Google"
 3. Google OAuth popup opens
@@ -74,6 +75,7 @@ The frontend integrates with the Python backend API endpoints:
 10. User can now access voice AI features
 
 ### Guest Users
+
 1. User visits the application
 2. User clicks "Continue as Guest"
 3. User is immediately granted access to voice AI features
@@ -176,4 +178,4 @@ Enable debug logging by checking browser console for authentication-related mess
 - [ ] Add multi-factor authentication
 - [ ] Support additional OAuth providers
 - [ ] Add user role management
-- [ ] Implement user analytics 
+- [ ] Implement user analytics

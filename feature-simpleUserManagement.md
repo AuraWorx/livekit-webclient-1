@@ -30,6 +30,7 @@ This document outlines the implementation of Google OAuth authentication for the
 ### Frontend Requirements
 
 #### Authentication Components
+
 - Google OAuth button component
 - Authentication state management
 - JWT token storage and management
@@ -37,12 +38,14 @@ This document outlines the implementation of Google OAuth authentication for the
 - Logout functionality
 
 #### API Integration
+
 - Integration with backend authentication endpoints
 - Token refresh mechanism
 - Error handling for authentication failures
 - Loading states during authentication
 
 #### Security Considerations
+
 - Secure JWT storage (httpOnly cookies or secure localStorage)
 - Token expiration handling
 - Automatic logout on token expiration
@@ -51,12 +54,14 @@ This document outlines the implementation of Google OAuth authentication for the
 ### Backend Integration Points
 
 #### API Endpoints to Integrate
+
 - `POST /api/v1/auth/google/verify` - Verify Google token and login
 - `POST /api/v1/auth/refresh` - Refresh JWT token
 - `POST /api/v1/auth/logout` - Logout user
 - `GET /api/v1/users/me` - Get current user profile
 
 #### Data Models
+
 ```typescript
 interface User {
   id: string;
@@ -82,12 +87,14 @@ interface AuthResponse {
 ## UI/UX Requirements
 
 ### Authentication States
+
 1. **Unauthenticated** - Show welcome screen with Google sign-in button
 2. **Authenticating** - Show loading spinner during OAuth flow
 3. **Authenticated** - Show user profile and session controls
 4. **Error** - Show error messages with retry options
 
 ### Component Design
+
 - Google sign-in button with Google branding
 - User profile dropdown with logout option
 - Loading indicators during authentication
@@ -95,6 +102,7 @@ interface AuthResponse {
 - Responsive design for mobile/desktop
 
 ### Integration Points
+
 - Modify existing `Welcome` component to include authentication
 - Update `SessionView` to show user context
 - Add authentication state to main `App` component
@@ -103,24 +111,28 @@ interface AuthResponse {
 ## Implementation Plan
 
 ### Phase 1: Core Authentication Setup
+
 1. Set up Google OAuth client configuration
 2. Create authentication context and hooks
 3. Implement Google sign-in flow
 4. Add JWT token management
 
 ### Phase 2: UI Integration
+
 1. Update welcome screen with authentication
 2. Add user profile components
 3. Implement logout functionality
 4. Add loading and error states
 
 ### Phase 3: Session Management
+
 1. Implement token refresh mechanism
 2. Add automatic logout on token expiration
 3. Integrate with existing LiveKit session management
 4. Add user context to voice sessions
 
 ### Phase 4: Polish & Testing
+
 1. Add comprehensive error handling
 2. Implement proper loading states
 3. Add unit and integration tests
@@ -129,6 +141,7 @@ interface AuthResponse {
 ## Technical Architecture
 
 ### Authentication Context
+
 ```typescript
 interface AuthContextType {
   user: User | null;
@@ -141,6 +154,7 @@ interface AuthContextType {
 ```
 
 ### API Service Layer
+
 ```typescript
 interface AuthService {
   verifyGoogleToken: (googleToken: string) => Promise<AuthResponse>;
@@ -151,6 +165,7 @@ interface AuthService {
 ```
 
 ### Storage Strategy
+
 - Store JWT tokens in httpOnly cookies for security
 - Use localStorage for user profile data (non-sensitive)
 - Implement automatic token refresh before expiration
@@ -158,6 +173,7 @@ interface AuthService {
 ## Environment Configuration
 
 ### Required Environment Variables
+
 ```env
 # Google OAuth
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.googleusercontent.com
@@ -168,6 +184,7 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ```
 
 ### Google OAuth Setup
+
 1. Configure Google Cloud Console project
 2. Set up OAuth 2.0 credentials
 3. Add authorized redirect URIs
@@ -176,12 +193,14 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Error Handling
 
 ### Authentication Errors
+
 - Google OAuth failures
 - Backend API errors
 - Token validation errors
 - Network connectivity issues
 
 ### User Experience
+
 - Clear error messages
 - Retry mechanisms
 - Graceful fallbacks
@@ -190,12 +209,14 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Security Considerations
 
 ### Token Security
+
 - Use httpOnly cookies for JWT storage
 - Implement proper CORS configuration
 - Validate tokens on each request
 - Handle token expiration gracefully
 
 ### Data Protection
+
 - Never store sensitive data in localStorage
 - Implement proper logout cleanup
 - Secure API communication
@@ -204,18 +225,21 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Testing Strategy
 
 ### Unit Tests
+
 - Authentication hooks and context
 - API service functions
 - Component rendering
 - Error handling
 
 ### Integration Tests
+
 - End-to-end authentication flow
 - Token refresh mechanism
 - Session management
 - API integration
 
 ### Manual Testing
+
 - Google OAuth flow
 - Cross-browser compatibility
 - Mobile responsiveness
@@ -224,12 +248,14 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Performance Considerations
 
 ### Optimization
+
 - Lazy load authentication components
 - Implement proper caching strategies
 - Optimize bundle size
 - Minimize API calls
 
 ### Monitoring
+
 - Track authentication success/failure rates
 - Monitor token refresh performance
 - Log user session metrics
@@ -238,12 +264,14 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Success Metrics
 
 ### User Experience
+
 - Authentication success rate > 95%
 - Average authentication time < 3 seconds
 - Error rate < 2%
 - User satisfaction score > 4.5/5
 
 ### Technical Performance
+
 - API response time < 500ms
 - Token refresh success rate > 99%
 - Session timeout handling 100%
@@ -252,11 +280,13 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Dependencies
 
 ### External Dependencies
+
 - Google OAuth JavaScript library
 - JWT token management library
 - HTTP client for API calls
 
 ### Internal Dependencies
+
 - Existing LiveKit integration
 - Toast notification system
 - Theme and styling system
@@ -265,12 +295,14 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Risk Assessment
 
 ### Technical Risks
+
 - Google OAuth configuration issues
 - Backend API compatibility
 - Token security vulnerabilities
 - Cross-browser compatibility
 
 ### Mitigation Strategies
+
 - Comprehensive testing plan
 - Security review and audit
 - Fallback authentication methods
@@ -279,21 +311,25 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ## Timeline
 
 ### Week 1: Foundation
+
 - Set up Google OAuth configuration
 - Create authentication context and hooks
 - Implement basic sign-in flow
 
 ### Week 2: Integration
+
 - Update UI components
 - Integrate with existing app flow
 - Add error handling
 
 ### Week 3: Polish
+
 - Add loading states and animations
 - Implement token refresh
 - Add comprehensive testing
 
 ### Week 4: Deployment
+
 - Security review
 - Performance optimization
 - Documentation and training
@@ -401,6 +437,7 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
   - [x] Remove hyperlink from Daisy logo for cleaner branding
   - [x] Fix linting and formatting issues across all components
   - [x] Resolve all critical linting errors (only warnings remain)
+  - [x] Fix Prettier formatting issues in all files
 
 - [ ] **Implement token refresh mechanism**
   - [ ] Add automatic token refresh before expiration

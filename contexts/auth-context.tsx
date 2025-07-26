@@ -20,11 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializeAuth = async () => {
     try {
       setIsLoading(true);
-      
+
       // Check for stored user data
       const storedUser = authService.getStoredUser();
       const refreshToken = authService.getStoredRefreshToken();
-      
+
       if (storedUser && refreshToken) {
         // Verify if the stored user is still valid
         try {
@@ -182,10 +182,10 @@ async function loadGoogleOAuthScript(): Promise<void> {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
-    
+
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Failed to load Google OAuth script'));
-    
+
     document.head.appendChild(script);
   });
-} 
+}
