@@ -11,7 +11,7 @@ interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({ className, disabled }: GoogleSignInButtonProps) {
-  const { signInWithGoogle, isLoading, error } = useAuth();
+  const { signInWithGoogle, isLoading } = useAuth();
 
   const handleClick = async () => {
     if (disabled || isLoading) return;

@@ -399,6 +399,7 @@ NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
   - [x] Fix logo asset path (WQ_Daisy_Logo.svg)
   - [x] Remove "Built with LiveKit Agents" text to prevent UI interference
   - [x] Remove hyperlink from Daisy logo for cleaner branding
+  - [x] Fix linting and formatting issues across all components
 
 - [ ] **Implement token refresh mechanism**
   - [ ] Add automatic token refresh before expiration

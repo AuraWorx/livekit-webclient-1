@@ -19,7 +19,7 @@ export const Welcome = ({
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeProps) => {
-  const { user, isAuthenticated, isGuest, isLoading, error } = useAuth();
+  const { isAuthenticated, isGuest, isLoading, error } = useAuth();
 
   // Show error toast if authentication fails
   React.useEffect(() => {

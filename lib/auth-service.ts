@@ -24,17 +24,17 @@ class AuthServiceImpl implements AuthService {
       };
     }
 
-        try {
+    try {
       console.log('Making API request to:', url);
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('API request failed:', {
           status: response.status,
           statusText: response.statusText,
           url,
-          errorData
+          errorData,
         });
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
@@ -65,15 +65,17 @@ class AuthServiceImpl implements AuthService {
   }
 
   async verifyGoogleToken(googleToken: string): Promise<AuthResponse> {
-    console.log('Sending Google token verification request:', { google_token: googleToken.substring(0, 20) + '...' });
-    
+    console.log('Sending Google token verification request:', {
+      google_token: googleToken.substring(0, 20) + '...',
+    });
+
     const response = await this.makeRequest<AuthResponse>('/auth/google/verify', {
       method: 'POST',
       body: JSON.stringify({ google_token: googleToken }),
     });
 
     console.log('Google token verification successful');
-    
+
     // Store tokens and user data
     this.setTokens(response.accessToken, response.refreshToken);
     localStorage.setItem('user', JSON.stringify(response.user));
