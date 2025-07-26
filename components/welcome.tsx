@@ -1,4 +1,11 @@
+import React from 'react';
+import { toastAlert } from '@/components/alert-toast';
+import { AuthLoading } from '@/components/auth/auth-loading';
+import { GoogleSignInButton } from '@/components/auth/google-signin-button';
+import { GuestSignInButton } from '@/components/auth/guest-signin-button';
+import { UserProfile } from '@/components/auth/user-profile';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth-context';
 
 interface WelcomeProps {
   disabled: boolean;
@@ -12,6 +19,18 @@ export const Welcome = ({
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeProps) => {
+  const { user, isAuthenticated, isGuest, isLoading, error } = useAuth();
+
+  // Show error toast if authentication fails
+  React.useEffect(() => {
+    if (error) {
+      toastAlert({
+        title: 'Authentication Error',
+        description: error,
+      });
+    }
+  }, [error]);
+
   return (
     <div
       ref={ref}
@@ -35,20 +54,48 @@ export const Welcome = ({
       <p className="text-fg1 max-w-prose pt-1 leading-6 font-medium">
         Chat live with your voice AI agent
       </p>
-      <Button variant="primary" size="lg" onClick={onStartCall} className="mt-6 w-64 font-mono">
-        {startButtonText}
-      </Button>
+
+      {/* Authentication Section */}
+      {isLoading ? (
+        <div className="mt-6">
+          <AuthLoading message="Initializing..." />
+        </div>
+      ) : !isAuthenticated && !isGuest ? (
+        <div className="mt-6 space-y-4">
+          <p className="text-fg2 text-sm">Sign in to start your voice AI session</p>
+          <div className="flex flex-col gap-3">
+            <GoogleSignInButton className="w-64" />
+            <div className="flex items-center gap-2">
+              <div className="h-px flex-1 bg-gray-300"></div>
+              <span className="text-xs text-gray-500">or</span>
+              <div className="h-px flex-1 bg-gray-300"></div>
+            </div>
+            <GuestSignInButton className="w-64" />
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center justify-center gap-4">
+            {isAuthenticated && <UserProfile />}
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={onStartCall}
+              className="w-48 font-mono"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : startButtonText}
+            </Button>
+          </div>
+          {isGuest && (
+            <p className="text-xs text-gray-500">
+              You&apos;re using the app as a guest. Sign in to save your sessions.
+            </p>
+          )}
+        </div>
+      )}
       <p className="text-fg1 m fixed bottom-5 left-1/2 w-full max-w-prose -translate-x-1/2 pt-1 text-xs leading-5 font-normal text-pretty md:text-sm">
-        Need help getting set up? Check out the{' '}
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://docs.livekit.io/agents/start/voice-ai/"
-          className="underline"
-        >
-          Voice AI quickstart
-        </a>
-        .
+        Daisy - Your Conversational AI chatbot
       </p>
     </div>
   );

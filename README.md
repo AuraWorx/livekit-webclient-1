@@ -14,6 +14,8 @@ Also available for:
 ### Features:
 
 - Real-time voice interaction with LiveKit Agents
+- Google OAuth authentication with user management
+- Guest/Anonymous access mode
 - Camera video streaming support
 - Screen sharing capabilities
 - Audio visualization and level monitoring
@@ -70,6 +72,10 @@ And open http://localhost:3000 in your browser.
 
 You'll also need an agent to speak with. Try our [Voice AI Quickstart](https://docs.livekit.io/start/voice-ai) for the easiest way to get started.
 
+### Authentication Setup
+
+This application includes Google OAuth authentication. See [AUTHENTICATION.md](./AUTHENTICATION.md) for setup instructions.
+
 ## Configuration
 
 This starter is designed to be flexible so you can adapt it to your specific agent use case. You can easily configure it to work with different types of inputs and outputs:
@@ -96,15 +102,23 @@ You can update these values in [`app-config.ts`](./app-config.ts) to customize b
 
 #### Environment Variables
 
-You'll also need to configure your LiveKit credentials in `.env.local` (copy `.env.example` if you don't have one):
+You'll also need to configure your LiveKit credentials and authentication settings in `.env.local` (copy `.env.example` if you don't have one):
 
 ```env
+# LiveKit Configuration
 LIVEKIT_API_KEY=your_livekit_api_key
 LIVEKIT_API_SECRET=your_livekit_api_secret
 LIVEKIT_URL=https://your-livekit-server-url
+
+# Google OAuth Configuration
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.googleusercontent.com
+
+# Backend API Configuration
+NEXT_PUBLIC_API_BASE_URL=https://wqbackend-testing.auraworx.com/api/v1
+NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
 ```
 
-These are required for the voice agent functionality to work with your LiveKit project.
+These are required for the voice agent functionality and authentication to work properly.
 
 ## Contributing
 
