@@ -95,7 +95,7 @@ export const Welcome = ({
         </div>
       )}
       <p className="text-fg1 m fixed bottom-5 left-1/2 w-full max-w-prose -translate-x-1/2 pt-1 text-xs leading-5 font-normal text-pretty md:text-sm">
-        Daisy - Your Conversational AI chatbot
+        LUMA - Your Conversational AI chatbot
       </p>
     </div>
   );

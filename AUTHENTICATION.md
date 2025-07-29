@@ -28,8 +28,8 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # Backend API Configuration
-NEXT_PUBLIC_API_BASE_URL=https://wqbackend-testing.auraworx.com/api/v1
-NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
+NEXT_PUBLIC_API_BASE_URL=https://lumabackend-dev.auraworx.com/api/v1
+NEXT_PUBLIC_FRONTEND_URL=https://lumaweb-dev.auraworx.com
 
 # LiveKit Configuration (existing)
 LIVEKIT_API_KEY=your_livekit_api_key
@@ -44,7 +44,7 @@ LIVEKIT_URL=https://your-livekit-server-url
 3. Enable Google+ API or Google People API
 4. Create OAuth 2.0 credentials
 5. Add authorized redirect URIs:
-   - `https://wqmobile-testing.auraworx.com`
+   - `https://lumaweb-dev.auraworx.com`
    - `http://localhost:3000` (for development)
 6. Copy Client ID to your `.env.local` file
 
