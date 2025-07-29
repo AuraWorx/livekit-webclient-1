@@ -13,11 +13,11 @@ export default async function AppLayout({ children }: AppLayoutProps) {
     <>
       <header className="fixed top-0 left-0 z-50 hidden w-full flex-row justify-start p-6 md:flex">
         <div className="scale-100 transition-transform duration-300">
-          <img src={logo} alt={`${companyName} Logo`} className="block size-26 dark:hidden" />
+          <img src={logo} alt={`${companyName} Logo`} className="block size-32 dark:hidden" />
           <img
             src={logoDark ?? logo}
             alt={`${companyName} Logo`}
-            className="hidden size-26 dark:block"
+            className="hidden size-32 dark:block"
           />
         </div>
       </header>

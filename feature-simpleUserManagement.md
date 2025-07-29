@@ -179,8 +179,8 @@ interface AuthService {
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.googleusercontent.com
 
 # Backend API
-NEXT_PUBLIC_API_BASE_URL=https://wqbackend-testing.auraworx.com/api/v1
-NEXT_PUBLIC_FRONTEND_URL=https://wqmobile-testing.auraworx.com
+NEXT_PUBLIC_API_BASE_URL=https://lumabackend-dev.auraworx.com/api/v1
+NEXT_PUBLIC_FRONTEND_URL=https://lumaweb-dev.auraworx.com
 ```
 
 ### Google OAuth Setup

@@ -1,7 +1,7 @@
 import type { AuthResponse, AuthService, User } from './auth-types';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://wqbackend-testing.auraworx.com/api/v1';
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://lumabackend-dev.auraworx.com/api/v1';
 
 class AuthServiceImpl implements AuthService {
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
